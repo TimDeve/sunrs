@@ -4,6 +4,7 @@ use std::mem;
 
 use crate::scenes::Scene;
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, BitfieldStruct, Default, Serialize, Deserialize)]
 struct Header {
     size: u16,
@@ -30,23 +31,27 @@ impl Header {
         let mut h: Header = Header {
             message_type,
             size,
+            source: 44444444,
             ..Default::default()
         };
 
         h.set_protocol(1024);
         h.set_tagged(true);
         h.set_addressable(true);
+        h.set_res_required(true);
 
         return h;
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 struct SetPowerPayload {
     level: u16,
     duration: u32,
 }
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SetPowerMessage {
     header: Header,
@@ -80,6 +85,7 @@ impl SetPowerMessage {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
 struct HSBK {
     hue: u16,
@@ -88,6 +94,7 @@ struct HSBK {
     kelvin: u16,
 }
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
 struct SetColorPayload {
     _padding: u8,
@@ -95,6 +102,7 @@ struct SetColorPayload {
     duration: u32,
 }
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SetColorMessage {
     header: Header,
@@ -129,4 +137,17 @@ impl SetColorMessage {
     pub fn new_scene(s: Scene) -> Self {
         Self::new(s.brightness, s.kelvin)
     }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+struct StatePower {
+    level: u16,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StatePowerMessage {
+    header: Header,
+    payload: StatePower,
 }
