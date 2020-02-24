@@ -2,6 +2,8 @@ use c2rust_bitfields::BitfieldStruct;
 use serde::{Deserialize, Serialize};
 use std::mem;
 
+use crate::scenes::Scene;
+
 #[derive(Debug, Copy, Clone, BitfieldStruct, Default, Serialize, Deserialize)]
 struct Header {
     size: u16,
@@ -52,20 +54,21 @@ pub struct SetPowerMessage {
 }
 
 impl SetPowerMessage {
-    fn new(level: u16) -> SetPowerMessage {
-        let h = Header::new(117, mem::size_of::<SetPowerMessage>() as u16);
+    fn message_type() -> u16 {
+        117
+    }
 
-        let pw = SetPowerPayload {
+    fn new(level: u16) -> SetPowerMessage {
+        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+
+        let payload = SetPowerPayload {
             duration: 256,
             level,
         };
 
-        let pwm = SetPowerMessage {
-            header: h,
-            payload: pw,
-        };
+        let msg = SetPowerMessage { header, payload };
 
-        return pwm;
+        return msg;
     }
 
     pub fn new_off_message() -> SetPowerMessage {
@@ -74,5 +77,56 @@ impl SetPowerMessage {
 
     pub fn new_on_message() -> SetPowerMessage {
         Self::new(0xFFFF)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
+struct HSBK {
+    hue: u16,
+    saturation: u16,
+    brightness: u16,
+    kelvin: u16,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
+struct SetColorPayload {
+    _padding: u8,
+    color: HSBK,
+    duration: u32,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct SetColorMessage {
+    header: Header,
+    payload: SetColorPayload,
+}
+
+impl SetColorMessage {
+    fn message_type() -> u16 {
+        102
+    }
+
+    pub fn new(brightness: u16, kelvin: u16) -> Self {
+        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+
+        let color = HSBK {
+            brightness,
+            kelvin,
+            ..Default::default()
+        };
+
+        let payload = SetColorPayload {
+            duration: 256,
+            color,
+            ..Default::default()
+        };
+
+        let msg = Self { header, payload };
+
+        return msg;
+    }
+
+    pub fn new_scene(s: Scene) -> Self {
+        Self::new(s.brightness, s.kelvin)
     }
 }
