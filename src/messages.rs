@@ -8,15 +8,15 @@ use crate::scenes::Scene;
 struct Header {
     size: u16,
     #[bitfield(name = "protocol", ty = "libc::c_ushort", bits = "0..=11")]
-    #[bitfield(name = "addressable", ty = "libc::c_uchar", bits = "12..=12")]
-    #[bitfield(name = "tagged", ty = "libc::c_uchar", bits = "13..=13")]
+    #[bitfield(name = "addressable", ty = "bool", bits = "12..=12")]
+    #[bitfield(name = "tagged", ty = "bool", bits = "13..=13")]
     #[bitfield(name = "origin", ty = "libc::c_uchar", bits = "14..=15")]
     protocol_addressable_tagged_origin: [u8; 2usize],
     source: u32,
     target: [u8; 8usize],
     reserved: [u8; 6usize],
-    #[bitfield(name = "res_required", ty = "libc::c_uchar", bits = "0..=0")]
-    #[bitfield(name = "ack_required", ty = "libc::c_uchar", bits = "1..=1")]
+    #[bitfield(name = "res_required", ty = "bool", bits = "0..=0")]
+    #[bitfield(name = "ack_required", ty = "bool", bits = "1..=1")]
     #[bitfield(name = "_padding_one", ty = "libc::c_uchar", bits = "2..=5")]
     res_required_ack_required_padding: [u8; 1usize],
     sequence: u8,
@@ -34,8 +34,8 @@ impl Header {
         };
 
         h.set_protocol(1024);
-        h.set_tagged(1);
-        h.set_addressable(1);
+        h.set_tagged(true);
+        h.set_addressable(true);
 
         return h;
     }
