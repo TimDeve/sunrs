@@ -1,12 +1,12 @@
-mod messages;
-mod scenes;
+extern crate sunrs;
 
-use serde::ser::Serialize;
 use std::env;
-use std::net;
 
-use messages::{SetColorMessage, SetPowerMessage};
-use scenes::{BRIGHT, CHILL, COMPUTER, DARK, DAYLIGHT, READING};
+use sunrs::messages::{SetColorMessage, SetPowerMessage};
+use sunrs::net::send_message;
+use sunrs::scenes::{BRIGHT, CHILL, COMPUTER, DARK, DAYLIGHT, READING};
+
+const COMMAND_LINE_USAGE_ERROR_EXIT_CODE: i32 = 64;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -39,30 +39,16 @@ fn main() {
                 send_message(SetColorMessage::new_scene(CHILL));
                 send_message(SetPowerMessage::new_on_message());
             }
-            s => print_error_and_exit(&format!("Unrecognized command '{}'", s), 64),
+            s => print_error_and_exit(
+                &format!("Unrecognized command '{}'", s),
+                COMMAND_LINE_USAGE_ERROR_EXIT_CODE,
+            ),
         },
-        None => print_error_and_exit("Need command", 64),
+        None => print_error_and_exit("Need command", COMMAND_LINE_USAGE_ERROR_EXIT_CODE),
     }
 }
 
 fn print_error_and_exit(s: &str, exit_code: i32) {
     eprintln!("{}", s);
     std::process::exit(exit_code);
-}
-
-fn send_message<T: Serialize>(msg: T) {
-    let bytes: Vec<u8> = bincode::serialize(&msg).expect("Failed to convert message to bytes");
-    send(&bytes)
-}
-
-fn send(msg: &[u8]) {
-    let socket = net::UdpSocket::bind("0.0.0.0:0").expect("Failed to bind host socket");
-    socket
-        .set_broadcast(true)
-        .expect("Couldn't enable broadcast");
-
-    match socket.send_to(msg, "192.168.1.255:56700") {
-        Err(fail) => println!("Failed sending {:?}", fail),
-        _ => {}
-    }
 }
