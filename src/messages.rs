@@ -1,8 +1,25 @@
 use c2rust_bitfields::BitfieldStruct;
 use serde::{Deserialize, Serialize};
+
+use std::ffi::CStr;
 use std::mem;
 
 use crate::scenes::Scene;
+
+fn extract_string_from_bytes(bytes: &[u8]) -> Option<String> {
+    for (i, val) in bytes.iter().enumerate() {
+        if *val == b'\0' {
+            let str = &bytes[0..i + 1];
+
+            return match CStr::from_bytes_with_nul(&str) {
+                Ok(s) => Some(s.to_string_lossy().to_string()),
+                Err(_) => None,
+            };
+        }
+    }
+
+    None
+}
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, BitfieldStruct, Default, Serialize, Deserialize)]
@@ -31,7 +48,7 @@ impl Header {
         let mut h: Header = Header {
             message_type,
             size,
-            source: 44444444,
+            source: 4444,
             ..Default::default()
         };
 
@@ -141,7 +158,7 @@ impl SetColorMessage {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-struct StatePower {
+struct StatePowerPayload {
     level: u16,
 }
 
@@ -149,5 +166,154 @@ struct StatePower {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct StatePowerMessage {
     header: Header,
-    payload: StatePower,
+    payload: StatePowerPayload,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct GetServiceMessage {
+    header: Header,
+}
+
+impl GetServiceMessage {
+    fn message_type() -> u16 {
+        2
+    }
+
+    pub fn new() -> Self {
+        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+        let msg = Self { header };
+        return msg;
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateServicePayload {
+    service: u8,
+    port: u32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateServiceMessage {
+    header: Header,
+    payload: StateServicePayload,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct GetLocationMessage {
+    header: Header,
+}
+
+impl GetLocationMessage {
+    fn message_type() -> u16 {
+        48
+    }
+
+    pub fn new() -> Self {
+        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+        let msg = Self { header };
+        return msg;
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateLocationPayload {
+    location: [u8; 16usize],
+    label: [u8; 32usize],
+    updated_at: u64,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateLocationMessage {
+    header: Header,
+    payload: StateLocationPayload,
+}
+
+impl StateLocationMessage {
+    pub fn get_label(&self) -> Option<String> {
+        extract_string_from_bytes(&self.payload.label)
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct GetLabelMessage {
+    header: Header,
+}
+
+impl GetLabelMessage {
+    fn message_type() -> u16 {
+        48
+    }
+
+    pub fn new() -> Self {
+        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+        let msg = Self { header };
+        return msg;
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateLabelPayload {
+    label: [u8; 32usize],
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateLabelMessage {
+    header: Header,
+    payload: StateLocationPayload,
+}
+
+impl StateLabelMessage {
+    pub fn get_label(&self) -> Option<String> {
+        extract_string_from_bytes(&self.payload.label)
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct GetMessage {
+    header: Header,
+}
+
+impl GetMessage {
+    fn message_type() -> u16 {
+        101
+    }
+
+    pub fn new() -> Self {
+        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+        let msg = Self { header };
+        return msg;
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StatePayload {
+    color: HSBK,
+    _reserved_one: i16,
+    power: u16,
+    label: [u8; 32usize],
+    _reserved_two: u64,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct StateMessage {
+    header: Header,
+    payload: StatePayload,
+}
+
+impl StateMessage {
+    pub fn get_label(&self) -> Option<String> {
+        extract_string_from_bytes(&self.payload.label)
+    }
 }
