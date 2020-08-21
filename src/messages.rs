@@ -1,8 +1,28 @@
 use c2rust_bitfields::BitfieldStruct;
 use serde::{Deserialize, Serialize};
+use std::convert::TryInto;
 use std::mem;
 
 use crate::scenes::Scene;
+
+lazy_static! {
+    static ref MAC_ADDRESS: [u8; 8usize] = {
+        let mac_address: &'static str = env!(
+            "SUNRS_MAC",
+            "Need to provide the bulb mac address as env var SUNRS_MAC"
+        );
+
+        let parsed_mac = hex::decode(format!("{}0000", mac_address.replace(":", ""))).expect(
+            &format!("Expected a 6 bytes mac address but got '{}'", mac_address),
+        );
+
+        let mac_array: Box<[u8; 8usize]> = match parsed_mac.into_boxed_slice().try_into() {
+            Ok(arr) => arr,
+            Err(_) => panic!("Expected a 6 bytes mac address but got '{}'", mac_address),
+        };
+        *mac_array
+    };
+}
 
 #[derive(Debug, Copy, Clone, BitfieldStruct, Default, Serialize, Deserialize)]
 struct Header {
@@ -30,11 +50,12 @@ impl Header {
         let mut h: Header = Header {
             message_type,
             size,
+            target: *MAC_ADDRESS,
             ..Default::default()
         };
 
         h.set_protocol(1024);
-        h.set_tagged(true);
+        h.set_tagged(false);
         h.set_addressable(true);
 
         return h;
