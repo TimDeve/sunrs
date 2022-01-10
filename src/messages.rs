@@ -1,27 +1,13 @@
-use c2rust_bitfields::BitfieldStruct;
-use serde::{Deserialize, Serialize};
-use std::convert::TryInto;
 use std::mem;
 
-use crate::scenes::Scene;
+use c2rust_bitfields::BitfieldStruct;
+use serde::{Deserialize, Serialize};
 
-lazy_static! {
-    static ref MAC_ADDRESS: [u8; 8usize] = {
-        let mac_address: &'static str = env!(
-            "SUNRS_MAC",
-            "Need to provide the bulb mac address as env var SUNRS_MAC"
-        );
-
-        let parsed_mac = hex::decode(format!("{}0000", mac_address.replace(":", ""))).expect(
-            &format!("Expected a 6 bytes mac address but got '{}'", mac_address),
-        );
-
-        let mac_array: Box<[u8; 8usize]> = match parsed_mac.into_boxed_slice().try_into() {
-            Ok(arr) => arr,
-            Err(_) => panic!("Expected a 6 bytes mac address but got '{}'", mac_address),
-        };
-        *mac_array
-    };
+#[derive(Copy, Clone)]
+pub struct Command {
+    pub mac_address: [u8; 8usize],
+    pub brightness: u16,
+    pub kelvin: u16,
 }
 
 #[derive(Debug, Copy, Clone, BitfieldStruct, Default, Serialize, Deserialize)]
@@ -46,11 +32,11 @@ struct Header {
 }
 
 impl Header {
-    fn new(message_type: u16, size: u16) -> Header {
+    fn new(mac_address: [u8; 8usize], message_type: u16, size: u16) -> Header {
         let mut h: Header = Header {
             message_type,
             size,
-            target: *MAC_ADDRESS,
+            target: mac_address,
             ..Default::default()
         };
 
@@ -79,8 +65,12 @@ impl SetPowerMessage {
         117
     }
 
-    fn new(level: u16) -> SetPowerMessage {
-        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+    fn new(mac_address: [u8; 8usize], level: u16) -> SetPowerMessage {
+        let header = Header::new(
+            mac_address,
+            Self::message_type(),
+            mem::size_of::<Self>() as u16,
+        );
 
         let payload = SetPowerPayload {
             duration: 256,
@@ -92,12 +82,12 @@ impl SetPowerMessage {
         return msg;
     }
 
-    pub fn new_off_message() -> SetPowerMessage {
-        Self::new(0x0000)
+    pub fn new_off_message(mac_address: [u8; 8usize]) -> SetPowerMessage {
+        Self::new(mac_address, 0x0000)
     }
 
-    pub fn new_on_message() -> SetPowerMessage {
-        Self::new(0xFFFF)
+    pub fn new_on_message(mac_address: [u8; 8usize]) -> SetPowerMessage {
+        Self::new(mac_address, 0xFFFF)
     }
 }
 
@@ -127,8 +117,12 @@ impl SetColorMessage {
         102
     }
 
-    pub fn new(brightness: u16, kelvin: u16) -> Self {
-        let header = Header::new(Self::message_type(), mem::size_of::<Self>() as u16);
+    pub fn new(mac_address: [u8; 8usize], brightness: u16, kelvin: u16) -> Self {
+        let header = Header::new(
+            mac_address,
+            Self::message_type(),
+            mem::size_of::<Self>() as u16,
+        );
 
         let color = HSBK {
             brightness,
@@ -147,7 +141,7 @@ impl SetColorMessage {
         return msg;
     }
 
-    pub fn new_scene(s: Scene) -> Self {
-        Self::new(s.brightness, s.kelvin)
+    pub fn new_scene(c: Command) -> Self {
+        Self::new(c.mac_address, c.brightness, c.kelvin)
     }
 }
