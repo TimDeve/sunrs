@@ -11,6 +11,8 @@ const COMMAND_LINE_USAGE_ERROR_EXIT_CODE: i32 = 64;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+    sunrs::config::get_config();
+
     match args.get(1) {
         Some(s) => match s.as_ref() {
             "on" => send_message(SetPowerMessage::new_on_message()),
