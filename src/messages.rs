@@ -3,7 +3,7 @@ use std::mem;
 use c2rust_bitfields::BitfieldStruct;
 use serde::{Deserialize, Serialize};
 
-pub type MacAddress = [u8; 8usize];
+pub type MacAddress = [u8; 8];
 
 #[derive(Copy, Clone)]
 pub struct Command {
@@ -19,18 +19,18 @@ struct Header {
     #[bitfield(name = "addressable", ty = "bool", bits = "12..=12")]
     #[bitfield(name = "tagged", ty = "bool", bits = "13..=13")]
     #[bitfield(name = "origin", ty = "libc::c_uchar", bits = "14..=15")]
-    protocol_addressable_tagged_origin: [u8; 2usize],
+    protocol_addressable_tagged_origin: [u8; 2],
     source: u32,
     target: MacAddress,
-    reserved: [u8; 6usize],
+    reserved: [u8; 6],
     #[bitfield(name = "res_required", ty = "bool", bits = "0..=0")]
     #[bitfield(name = "ack_required", ty = "bool", bits = "1..=1")]
     #[bitfield(name = "_padding_one", ty = "libc::c_uchar", bits = "2..=5")]
-    res_required_ack_required_padding: [u8; 1usize],
+    res_required_ack_required_padding: [u8; 1],
     sequence: u8,
-    _padding_two: [u8; 8usize],
+    _padding_two: [u8; 8],
     message_type: u16,
-    _padding_three: [u8; 2usize],
+    _padding_three: [u8; 2],
 }
 
 impl Header {
