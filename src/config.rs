@@ -7,21 +7,21 @@ use serde_derive::Deserialize;
 
 use crate::messages::Command;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct SceneValue {
     pub bulb: String,
     pub brightness: u16,
     pub kelvin: u16,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Scene {
     pub name: String,
     pub command: String,
     pub values: Vec<SceneValue>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Config {
     pub bulbs: HashMap<String, String>,
     pub scenes: Vec<Scene>,
