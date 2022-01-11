@@ -9,22 +9,22 @@ use crate::messages::Command;
 
 #[derive(Deserialize, Debug)]
 pub struct SceneValue {
-    bulb: String,
-    brightness: u16,
-    kelvin: u16,
+    pub bulb: String,
+    pub brightness: u16,
+    pub kelvin: u16,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Scene {
-    name: String,
-    command: String,
-    values: Vec<SceneValue>,
+    pub name: String,
+    pub command: String,
+    pub values: Vec<SceneValue>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    bulbs: HashMap<String, String>,
-    scenes: Vec<Scene>,
+    pub bulbs: HashMap<String, String>,
+    pub scenes: Vec<Scene>,
 }
 
 impl Config {
