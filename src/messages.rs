@@ -3,9 +3,11 @@ use std::mem;
 use c2rust_bitfields::BitfieldStruct;
 use serde::{Deserialize, Serialize};
 
+pub type MacAddress = [u8; 8usize];
+
 #[derive(Copy, Clone)]
 pub struct Command {
-    pub mac_address: [u8; 8usize],
+    pub mac_address: MacAddress,
     pub brightness: u16,
     pub kelvin: u16,
 }
@@ -19,7 +21,7 @@ struct Header {
     #[bitfield(name = "origin", ty = "libc::c_uchar", bits = "14..=15")]
     protocol_addressable_tagged_origin: [u8; 2usize],
     source: u32,
-    target: [u8; 8usize],
+    target: MacAddress,
     reserved: [u8; 6usize],
     #[bitfield(name = "res_required", ty = "bool", bits = "0..=0")]
     #[bitfield(name = "ack_required", ty = "bool", bits = "1..=1")]
@@ -32,7 +34,7 @@ struct Header {
 }
 
 impl Header {
-    fn new(mac_address: [u8; 8usize], message_type: u16, size: u16) -> Header {
+    fn new(mac_address: MacAddress, message_type: u16, size: u16) -> Header {
         let mut h: Header = Header {
             message_type,
             size,
@@ -65,7 +67,7 @@ impl SetPowerMessage {
         117
     }
 
-    fn new(mac_address: [u8; 8usize], level: u16) -> SetPowerMessage {
+    fn new(mac_address: MacAddress, level: u16) -> SetPowerMessage {
         let header = Header::new(
             mac_address,
             Self::message_type(),
@@ -82,11 +84,11 @@ impl SetPowerMessage {
         return msg;
     }
 
-    pub fn new_off_message(mac_address: [u8; 8usize]) -> SetPowerMessage {
+    pub fn new_off_message(mac_address: MacAddress) -> SetPowerMessage {
         Self::new(mac_address, 0x0000)
     }
 
-    pub fn new_on_message(mac_address: [u8; 8usize]) -> SetPowerMessage {
+    pub fn new_on_message(mac_address: MacAddress) -> SetPowerMessage {
         Self::new(mac_address, 0xFFFF)
     }
 }
@@ -117,7 +119,7 @@ impl SetColorMessage {
         102
     }
 
-    pub fn new(mac_address: [u8; 8usize], brightness: u16, kelvin: u16) -> Self {
+    pub fn new(mac_address: MacAddress, brightness: u16, kelvin: u16) -> Self {
         let header = Header::new(
             mac_address,
             Self::message_type(),

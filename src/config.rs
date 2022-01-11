@@ -5,7 +5,7 @@ use std::path::Path;
 
 use serde_derive::Deserialize;
 
-use crate::messages::Command;
+use crate::messages::{Command, MacAddress};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct SceneValue {
@@ -43,10 +43,10 @@ impl Config {
         Config::from_file(&filepath)
     }
 
-    pub fn bulbs_addresses(&self) -> Vec<[u8; 8usize]> {
+    pub fn bulbs_addresses(&self) -> Vec<MacAddress> {
         self.bulbs
             .iter()
-            .map(|(_k, v)| -> [u8; 8usize] { str_to_address(v) })
+            .map(|(_k, v)| -> MacAddress { str_to_address(v) })
             .collect()
     }
 
@@ -93,19 +93,19 @@ impl Config {
             .collect()
     }
 
-    fn mac_from_bulb_name(&self, bulb: &str) -> Option<[u8; 8usize]> {
+    fn mac_from_bulb_name(&self, bulb: &str) -> Option<MacAddress> {
         let bulb_address = self.bulbs.get(bulb)?;
         Some(str_to_address(&bulb_address))
     }
 }
 
-fn str_to_address(mac_address: &str) -> [u8; 8usize] {
+fn str_to_address(mac_address: &str) -> MacAddress {
     let parsed_mac = hex::decode(format!("{}0000", mac_address.replace(":", ""))).expect(&format!(
         "Expected a 6 bytes mac address but got '{}'",
         mac_address
     ));
 
-    let mac_array: Box<[u8; 8usize]> = parsed_mac.into_boxed_slice().try_into().expect(&format!(
+    let mac_array: Box<MacAddress> = parsed_mac.into_boxed_slice().try_into().expect(&format!(
         "Expected a 6 bytes mac address but got '{}'",
         mac_address
     ));

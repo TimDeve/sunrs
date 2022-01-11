@@ -2,7 +2,7 @@ extern crate sunrs;
 
 use std::env;
 
-use sunrs::messages::{Command, SetColorMessage, SetPowerMessage};
+use sunrs::messages::{Command, SetColorMessage, SetPowerMessage, MacAddress};
 use sunrs::net::send_message;
 
 const COMMAND_LINE_USAGE_ERROR_EXIT_CODE: i32 = 64;
@@ -28,13 +28,13 @@ fn main() {
     }
 }
 
-fn send_on_message(addresses: Vec<[u8; 8usize]>) {
+fn send_on_message(addresses: Vec<MacAddress>) {
     for address in addresses.iter() {
         send_message(SetPowerMessage::new_on_message(*address))
     }
 }
 
-fn send_off_message(addresses: Vec<[u8; 8usize]>) {
+fn send_off_message(addresses: Vec<MacAddress>) {
     for address in addresses.iter() {
         send_message(SetPowerMessage::new_off_message(*address))
     }
